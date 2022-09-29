@@ -125,7 +125,7 @@ class Command:
         """
         pass;       LOG and print(f'- bstrap compelte')
         carets = ed_self.get_carets()
-        if not all(c[3]==-1 for c in carets):   # abort if selection
+        if not all(c[3]==-1 or (c[0]==c[2] and c[1]==c[3]) for c in carets):   # abort if selection
             return
 
         try:
