@@ -1,2 +1,6 @@
+
+2022.09.29
+- fix: better handle situations when only opening quote-char is present (by @veksha)
+
 2021.08.10
-init version
+initial version
