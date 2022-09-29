@@ -8,7 +8,7 @@ from cudax_lib import get_translation, _json_loads
 
 _   = get_translation(__file__)  # I18N
 
-CompCfg = namedtuple('CompCfg', 'word_prefix word_range attr_range spaced_l spaced_r')
+CompCfg = namedtuple('CompCfg', 'word_prefix word_range attr_range spaced_l spaced_r closing_quote')
 
 
 LOG = False
@@ -23,7 +23,8 @@ CLASS_SEP = {'"',  "'",  '\x09', '\x0a', '\x0c', '\x0d', '\x20'}
 SNIP_ID = 'strap_snip'
 # 5 groups - attributes
 # ^ first - all combined, + two - quoted, + unquoted name present, + unquoted empty
-CLASS_ATTR_PTRN = re.compile('\\bclass=("([^"]*)|\'([^\']*)|(\w[^\s>]*)|())')
+#CLASS_ATTR_PTRN = re.compile('\\bclass=("([^"]*)|\'([^\']*)|(\w[^\s>]*)|())')
+CLASS_ATTR_PTRN = re.compile('\\bclass=(?:"|\')([^"\'\\>]*(?:\\.[^"\'\\>]*)*)')
 
 opt_versions = [4]  # default, when project versions is missing
 
@@ -168,6 +169,8 @@ class Command:
         new_carets = []
         for cc in self._comp_cfgs:
             caret = _complete(ed_self, snippet_text, cc, replace_attr)
+            if cc.closing_quote:
+                ed_self.insert(*caret[:2],cc.closing_quote)
             new_carets.append(caret)
 
         _set_carets(ed_self, new_carets)
@@ -220,6 +223,9 @@ def _get_caret_completion_cfg(ed_self, caret):
     attr_val = m[1]
     gx0,gx1 = m.span(1)
     #print(f' -- match attrr: span {m.span(1), attr_val}, caret: {x}')
+    opening_quote = m[0][prefix_len:prefix_len+1]
+    closing_quote = line[gx1:].strip()[:1]
+    closing_quote = '' if closing_quote == opening_quote else opening_quote
 
     if not (gx0 <= x <= gx1):
         raise InvalidCaretException("Caret is outside of attribute value")
@@ -244,7 +250,7 @@ def _get_caret_completion_cfg(ed_self, caret):
         spaced_r = x == gx1  or  class_name_x1 == gx1  or  line[class_name_x1] in CLASS_SEP
 
     cc = CompCfg(word_prefix=prefix, word_range=word_range, attr_range=attr_range,
-                    spaced_l=spaced_l, spaced_r=spaced_r)
+                    spaced_l=spaced_l, spaced_r=spaced_r, closing_quote=closing_quote)
     pass;       LOG and print(f'NOTE: comp cfg: {cc}')
     return cc
 
