@@ -7,6 +7,7 @@ from cudatext import *
 from cudax_lib import get_translation, _json_loads
 
 _   = get_translation(__file__)  # I18N
+api_ver = app_api_version()
 
 CompCfg = namedtuple('CompCfg', 'word_prefix word_range attr_range spaced_l spaced_r closing_quote')
 
@@ -152,7 +153,18 @@ class Command:
         self._prefixes = prefixes
 
         items = _merge_item_versions(items)
-        compl_text = '\n'.join('{0}\tBootstrap: {1}\t{0}'.format(txt, vers) for txt,vers in items)
+        
+        def add_html_tags(text, filter_text):
+            if api_ver < '1.0.431':    return text
+            if filter_text:
+                pos = text.find(filter_text) # case-sensitive
+                if pos == -1: # if not found try case-insensitive
+                    pos = text.lower().find(filter_text.lower())
+                if pos >= 0:    text = text[:pos]+'<b>'+text[pos:pos+len(filter_text)]+'</b>'+text[pos+len(filter_text):]
+            return '<html>'+text
+        
+        compl_text = '\n'.join('{0}\tBootstrap: {1}\t{0}'.format(add_html_tags(txt, _prefix), vers)
+            for txt,vers in items)
         ed_self.complete_alt(compl_text, SNIP_ID, 0)
         return True
 
