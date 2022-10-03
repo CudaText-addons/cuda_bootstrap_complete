@@ -26,6 +26,7 @@ SNIP_ID = 'strap_snip'
 # ^ first - all combined, + two - quoted, + unquoted name present, + unquoted empty
 #CLASS_ATTR_PTRN = re.compile('\\bclass=("([^"]*)|\'([^\']*)|(\w[^\s>]*)|())')
 CLASS_ATTR_PTRN = re.compile('\\bclass=(?:"|\')([^"\'\\>]*(?:\\.[^"\'\\>]*)*)')
+TAG_DELETE_REGEX = re.compile('<.+?>')
 
 opt_versions = [4]  # default, when project versions is missing
 
@@ -160,7 +161,8 @@ class Command:
                 pos = text.find(filter_text) # case-sensitive
                 if pos == -1: # if not found try case-insensitive
                     pos = text.lower().find(filter_text.lower())
-                if pos >= 0:    text = text[:pos]+'<b>'+text[pos:pos+len(filter_text)]+'</b>'+text[pos+len(filter_text):]
+                if pos >= 0:
+                    text = text[:pos]+'<b>'+text[pos:pos+len(filter_text)]+'</b>'+text[pos+len(filter_text):]
             return '<html>'+text
         
         compl_text = '\n'.join('{0}\tBootstrap: {1}\t{0}'.format(add_html_tags(txt, _prefix), vers)
@@ -176,6 +178,9 @@ class Command:
         if snippet_id != SNIP_ID:       return
 
         pass;       LOG and print(f'- bstrap: on snip: {snippet_text}')
+
+        if snippet_text.startswith('<html>'):
+            snippet_text = re.sub(TAG_DELETE_REGEX, '', snippet_text)
 
         replace_attr = len(self._comp_cfgs) > 1     # if multicaret - replace whole attribute value
         new_carets = []
