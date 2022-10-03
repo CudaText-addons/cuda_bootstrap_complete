@@ -1,4 +1,7 @@
 
+2022.10.03
++ add: show partially bold items in completion-listbox
+
 2022.09.29
 - fix: better handle situations when only opening quote-char is present (by @veksha)
 
